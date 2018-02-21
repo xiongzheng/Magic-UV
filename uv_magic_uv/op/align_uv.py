@@ -29,7 +29,7 @@ from math import atan2, tan, sin, cos
 import bpy
 import bmesh
 from mathutils import Vector
-from bpy.props import EnumProperty, BoolProperty
+from bpy.props import EnumProperty, BoolProperty, FloatProperty
 
 from .. import common
 
@@ -168,7 +168,7 @@ class MUV_AUVCircle(bpy.types.Operator):
 
 
 # get horizontal differential of UV influenced by mesh vertex
-def get_hdiff_uv_vinfl(uv_layer, loop_seqs, vidx, hidx, pair_idx):
+def get_hdiff_uv_vinfl(uv_layer, loop_seqs, vidx, hidx, pair_idx, infl):
     common.debug_print(
         "vidx={0}, hidx={1}, pair_idx={2}".format(vidx, hidx, pair_idx))
 
@@ -189,6 +189,18 @@ def get_hdiff_uv_vinfl(uv_layer, loop_seqs, vidx, hidx, pair_idx):
         hloops.append(l)
     vert_hlen = get_loop_vert_len(hloops)
     common.debug_print(vert_hlen)
+
+    # [Ref]
+    # # calculate target path length
+    # # target = no influenced * (1 - infl) + influenced * infl
+    # tgt_noinfl = full_uvlen * (hidx + pidx) / (len(loop_seqs))
+    # tgt_infl = full_uvlen * accm_vlens[hidx * 2 + pidx] / full_vlen
+    # target_length = tgt_noinfl * (1 - self.mesh_infl) + \
+    #                 tgt_infl * self.mesh_infl
+
+    tgt_noinfl = uv_total_hlen * (hidx + pair_idx) / len(loop_seqs)
+    tgt_infl = uv_total_hlen * accm_vlens[hidx * 2 + pair_idx] / full_vlen
+    target_length = tgt_noinfl * (1 - infl) + tgt_infl * infl
 
     # get total UV length
     # uv_all_hdiff = loop_seqs[-1][0][-1][uv_layer].uv -
@@ -275,6 +287,13 @@ class MUV_AUVStraighten(bpy.types.Operator):
                     "by mesh vertex proportion",
         default=False
     )
+    mesh_infl = FloatProperty(
+        name="Mesh Influence",
+        description="Influence rate of mesh vertex",
+        min=0.0,
+        max=1.0,
+        default=0.0
+    )
 
     @classmethod
     def poll(cls, context):
@@ -293,12 +312,14 @@ class MUV_AUVStraighten(bpy.types.Operator):
             for vidx in range(0, len(hseq), 2):
                 if self.horizontal:
                     hdiff_uvs = [
-                        get_hdiff_uv_vinfl(uv_layer, loop_seqs, vidx, hidx, 0),
-                        get_hdiff_uv_vinfl(uv_layer, loop_seqs, vidx, hidx, 1),
+                        get_hdiff_uv_vinfl(uv_layer, loop_seqs, vidx, hidx, 0,
+                                           self.mesh_infl),
+                        get_hdiff_uv_vinfl(uv_layer, loop_seqs, vidx, hidx, 1,
+                                           self.mesh_infl),
                         get_hdiff_uv_vinfl(uv_layer, loop_seqs, vidx + 1,
-                                           hidx, 0),
+                                           hidx, 0, self.mesh_infl),
                         get_hdiff_uv_vinfl(uv_layer, loop_seqs, vidx + 1,
-                                           hidx, 1),
+                                           hidx, 1, self.mesh_infl),
                     ]
                 else:
                     hdiff_uvs = [
@@ -420,6 +441,13 @@ class MUV_AUVAxis(bpy.types.Operator):
             ('RIGHT_BOTTOM', "Right/Bottom", "Align to Right or Bottom")
         ],
         default='MIDDLE'
+    )
+    mesh_infl = FloatProperty(
+        name="Mesh Influence",
+        description="Influence rate of mesh vertex",
+        min=0.0,
+        max=1.0,
+        default=0.0
     )
 
     @classmethod
@@ -579,12 +607,14 @@ class MUV_AUVAxis(bpy.types.Operator):
             for vidx in range(0, len(hseq), 2):
                 if self.horizontal:
                     hdiff_uvs = [
-                        get_hdiff_uv_vinfl(uv_layer, loop_seqs, vidx, hidx, 0),
-                        get_hdiff_uv_vinfl(uv_layer, loop_seqs, vidx, hidx, 1),
+                        get_hdiff_uv_vinfl(uv_layer, loop_seqs, vidx, hidx, 0,
+                                           self.mesh_infl),
+                        get_hdiff_uv_vinfl(uv_layer, loop_seqs, vidx, hidx, 1,
+                                           self.mesh_infl),
                         get_hdiff_uv_vinfl(uv_layer, loop_seqs, vidx + 1,
-                                           hidx, 0),
+                                           hidx, 0, self.mesh_infl),
                         get_hdiff_uv_vinfl(uv_layer, loop_seqs, vidx + 1,
-                                           hidx, 1),
+                                           hidx, 1, self.mesh_infl),
                     ]
                     hdiff_uvs[0].y = hdiff_uvs[0].y + offset_uvs[hidx][0].y
                     hdiff_uvs[1].y = hdiff_uvs[1].y + offset_uvs[hidx][1].y
@@ -664,12 +694,14 @@ class MUV_AUVAxis(bpy.types.Operator):
             for vidx in range(0, len(hseq), 2):
                 if self.horizontal:
                     hdiff_uvs = [
-                        get_hdiff_uv_vinfl(uv_layer, loop_seqs, vidx, hidx, 0),
-                        get_hdiff_uv_vinfl(uv_layer, loop_seqs, vidx, hidx, 1),
+                        get_hdiff_uv_vinfl(uv_layer, loop_seqs, vidx, hidx, 0,
+                                           self.mesh_infl),
+                        get_hdiff_uv_vinfl(uv_layer, loop_seqs, vidx, hidx, 1,
+                                           self.mesh_infl),
                         get_hdiff_uv_vinfl(uv_layer, loop_seqs, vidx + 1,
-                                           hidx, 0),
+                                           hidx, 0, self.mesh_infl),
                         get_hdiff_uv_vinfl(uv_layer, loop_seqs, vidx + 1,
-                                           hidx, 1),
+                                           hidx, 1, self.mesh_infl),
                     ]
                     hdiff_uvs[0].x = hdiff_uvs[0].x + offset_uvs[hidx][0].x
                     hdiff_uvs[1].x = hdiff_uvs[1].x + offset_uvs[hidx][1].x

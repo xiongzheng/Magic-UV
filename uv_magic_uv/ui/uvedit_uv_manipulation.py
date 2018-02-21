@@ -81,6 +81,7 @@ class IMAGE_PT_MUV_UVManip(bpy.types.Panel):
             row = col.row(align=True)
             row.prop(sc, "muv_auv_vertical", text="Vertical")
             row.prop(sc, "muv_auv_horizontal", text="Horizontal")
+            col.prop(sc, "muv_auv_mesh_infl", text="Mesh Influence")
 
         box = layout.box()
         box.prop(sc, "muv_smuv_enabled", text="Smooth UV")

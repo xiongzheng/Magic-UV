@@ -749,21 +749,27 @@ class Singleton_updater(object):
         if self._verbose: print("Extracted source")
 
         # either directly in root of zip, or one folder level deep
-        unpath = os.path.join(self._updater_path,"source")
-        if os.path.isfile(os.path.join(unpath,"__init__.py")) == False:
-            dirlist = os.listdir(unpath)
-            if len(dirlist)>0:
-                unpath = os.path.join(unpath,dirlist[0])
+        def search_init_py(level, dir_path):
+            if level < 0:
+                return None
+            if os.path.isfile(os.path.join(dir_path, "__init__.py")) == False:
+                dirlist = os.listdir(dir_path)
+                for item in dirlist:
+                    item_path = os.path.join(dir_path, item)
+                    if os.path.isfile(item_path) == False:
+                        result = search_init_py(level - 1, os.path.join(dir_path, item_path))
+                        if result:
+                            return result
+                return None
 
-            # smarter check for additional sub folders for a single folder
-            # containing __init__.py
-            if os.path.isfile(os.path.join(unpath,"__init__.py")) == False:
-                if self._verbose:
-                    print("not a valid addon found")
-                    print("Paths:")
-                    print(dirlist)
+            return path
 
-                raise ValueError("__init__ file not found in new source")
+        level = 2
+        unpath = os.path.join(self._updater_path, "source")
+        path = search_init_py(level, unpath)
+        if not path:
+            raise ValueError("__init__ file not found in new source")
+
 
         # now commence merging in the two locations:
         # note this MAY not be accurate, as updater files could be placed elsewhere

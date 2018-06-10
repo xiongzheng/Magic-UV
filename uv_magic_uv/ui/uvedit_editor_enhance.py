@@ -54,7 +54,6 @@ class IMAGE_PT_MUV_EE(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         sc = context.scene
-        props = sc.muv_props
 
         box = layout.box()
         box.prop(sc, "muv_auvc_enabled", text="Align UV Cursor")
@@ -113,12 +112,9 @@ class IMAGE_PT_MUV_EE(bpy.types.Panel):
         box = layout.box()
         box.prop(sc, "muv_uvbb_enabled", text="UV Bounding Box")
         if sc.muv_uvbb_enabled:
-            if not uv_bounding_box.MUV_UVBB.is_running(context):
-                box.operator(uv_bounding_box.MUV_UVBBShow.bl_idname,
-                             text="Show", icon='PLAY')
-            else:
-                box.operator(uv_bounding_box.MUV_UVBBHide.bl_idname,
-                             text="Hide", icon='PAUSE')
+            box.prop(sc, "muv_uvbb_show",
+                     text="Hide" if uv_bounding_box.MUV_UVBB.is_running(context) else "Show",
+                     icon='DISCLOSURE_TRI_DOWN' if uv_bounding_box.MUV_UVBB.is_running(context) else 'DISCLOSURE_TRI_RIGHT')
             box.prop(sc, "muv_uvbb_uniform_scaling", text="Uniform Scaling")
             box.prop(sc, "muv_uvbb_boundary", text="Boundary")
 

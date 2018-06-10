@@ -35,6 +35,8 @@ from mathutils import Vector
 
 from . import common
 
+from .op import uv_bounding_box
+
 
 __all__ = [
     'get_loaded_texture_name',
@@ -277,26 +279,7 @@ def init_props(scene):
         default=False
     )
 
-    # UV Bounding Box
-    scene.muv_uvbb_enabled = BoolProperty(
-        name="UV Bounding Box Enabled",
-        description="UV Bounding Box is enabled",
-        default=False
-    )
-    scene.muv_uvbb_uniform_scaling = BoolProperty(
-        name="Uniform Scaling",
-        description="Enable Uniform Scaling",
-        default=False
-    )
-    scene.muv_uvbb_boundary = EnumProperty(
-        name="Boundary",
-        description="Boundary",
-        default='UV_SEL',
-        items=[
-            ('UV', "UV", "Boundary is decided by UV"),
-            ('UV_SEL', "UV (Selected)", "Boundary is decided by Selected UV")
-        ]
-    )
+
 
     # Pack UV
     scene.muv_packuv_enabled = BoolProperty(
@@ -639,6 +622,8 @@ def init_props(scene):
         default=False
     )
 
+    uv_bounding_box.MUV_UVBB.init_props(scene)
+
 
 def clear_props(scene):
     del scene.muv_props
@@ -677,11 +662,6 @@ def clear_props(scene):
     del scene.muv_smuv_transmission
     del scene.muv_smuv_mesh_infl
     del scene.muv_smuv_select
-
-    # UV Bounding Box
-    del scene.muv_uvbb_enabled
-    del scene.muv_uvbb_uniform_scaling
-    del scene.muv_uvbb_boundary
 
     # Pack UV
     del scene.muv_packuv_enabled
@@ -754,3 +734,5 @@ def clear_props(scene):
 
     # UV Cursor Location
     del scene.muv_uvcloc_enabled
+
+    uv_bounding_box.MUV_UVBB.del_props(scene)

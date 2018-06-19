@@ -85,6 +85,7 @@ class MUV_Prefs():
 
 
 class MUV_CPUVProps():
+    src_info = None
     src_uvs = None
     src_pin_uvs = None
     src_seams = None
